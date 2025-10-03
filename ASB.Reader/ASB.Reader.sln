@@ -1,33 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36518.9 d17.14
+VisualStudioVersion = 17.14.36518.9
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ASB.Reader", "ASB.Reader.csproj", "{D963F140-F7F6-4045-8E41-F6B247B2B80B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ASB.Pusher", "..\ASB.Pusher\ASB.Pusher.csproj", "{6EDF9E66-AEF6-4BB3-BFD1-B5F02A2075C3}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Terraform", "Terraform", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
-	ProjectSection(SolutionItems) = preProject
-		..\Terraform\.terraform.lock.hcl = ..\Terraform\.terraform.lock.hcl
-		..\Terraform\COMPONENTS.md = ..\Terraform\COMPONENTS.md
-		..\Terraform\deploy-modular.ps1 = ..\Terraform\deploy-modular.ps1
-		..\Terraform\deploy.ps1 = ..\Terraform\deploy.ps1
-		..\Terraform\functions.tf = ..\Terraform\functions.tf
-		..\Terraform\iam.tf = ..\Terraform\iam.tf
-		..\Terraform\main.tf = ..\Terraform\main.tf
-		..\Terraform\monitoring.tf = ..\Terraform\monitoring.tf
-		..\Terraform\outputs.tf = ..\Terraform\outputs.tf
-		..\Terraform\README.md = ..\Terraform\README.md
-		..\Terraform\resource.tf = ..\Terraform\resource.tf
-		..\Terraform\resources.tf = ..\Terraform\resources.tf
-		..\Terraform\servicebus.tf = ..\Terraform\servicebus.tf
-		..\Terraform\storage.tf = ..\Terraform\storage.tf
-		..\Terraform\Terraform.sln = ..\Terraform\Terraform.sln
-		..\Terraform\terraform.tfvars.example = ..\Terraform\terraform.tfvars.example
-		..\Terraform\Test-ExampleTestTopic.ps1 = ..\Terraform\Test-ExampleTestTopic.ps1
-		..\Terraform\variables.tf = ..\Terraform\variables.tf
-	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

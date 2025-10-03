@@ -33,22 +33,8 @@ public class FunctionPushToTopicAsb
         _serviceBusClient = AuthHelper.GetServiceBusClient();
     }
 
-
-    private static string ExtractNamespaceFromConnectionString(string connectionString)
-    {
-        // Extrahuje namespace URI z connection stringu
-        // Např. "Endpoint=sb://namespace.servicebus.windows.net/;Authentication=Managed Identity"
-        var endpointStart = connectionString.IndexOf("Endpoint=sb://") + 14;
-        var endpointEnd = connectionString.IndexOf("/;", endpointStart);
-
-        if (endpointEnd == -1)
-            endpointEnd = connectionString.Length;
-
-        return connectionString.Substring(endpointStart, endpointEnd - endpointStart);
-    }
-
     [Function("FunctionPushToTopicAsb")]
-    public async Task Run([TimerTrigger("* * * * * *")] TimerInfo myTimer)
+    public async Task Run([TimerTrigger("*/5 * * * * *")] TimerInfo myTimer)
     {
         _logger.LogInformation("C# Timer trigger function executed at: {executionTime}", DateTime.Now);
         

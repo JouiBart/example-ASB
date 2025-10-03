@@ -90,7 +90,7 @@ public class FunctionPushToQueueAsb
     }
 
     [Function("FunctionPushToQueueAsb")]
-    public async Task Run([TimerTrigger("0 */1 * * * *")] TimerInfo myTimer)
+    public async Task Run([TimerTrigger("*/5 * * * * *")] TimerInfo myTimer)
     {
         _logger.LogInformation("C# Timer trigger function executed at: {executionTime}", DateTime.Now);
         
