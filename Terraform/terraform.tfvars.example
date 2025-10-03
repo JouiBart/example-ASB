@@ -1,0 +1,38 @@
+# Zkopírujte tento soubor jako terraform.tfvars a upravte hodnoty dle potřeby
+
+# Základní konfigurace
+resource_group_name = "rg-azure-functions-asb-dev"
+location           = "West Europe"
+environment        = "dev"
+
+# Storage Account (musí být globálně jedinečný)
+storage_account_name = "stfuncasbdev001"
+
+# Function App
+function_app_name = "func-asb-dev-001"
+app_service_plan_name = "asp-asb-dev"
+function_app_sku = "Y1"  # Y1=Consumption, EP1=Premium
+dotnet_version = "9.0"  # .NET 9 isolated runtime
+
+# Service Bus
+servicebus_namespace_name = "sb-asb-dev-001"
+servicebus_sku = "Standard"
+servicebus_queue_name = "test"
+
+# Service Bus Topic
+create_servicebus_topic = true
+servicebus_topic_name = "asb-topic-test"
+
+# Service Bus Connection String (automaticky sestaveno z namespace)
+# servicebus_connection_string = "" # Ponechte prázdné pro auto-generování
+
+# Application Insights
+application_insights_name = "appi-asb-dev"
+
+# Tags
+tags = {
+  Environment = "Development"
+  Project     = "Azure-Functions-ASB"
+  CreatedBy   = "Terraform"
+  Owner       = "YourTeam"
+}

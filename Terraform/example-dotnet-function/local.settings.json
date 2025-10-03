@@ -1,0 +1,22 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
+    "FUNCTIONS_EXTENSION_VERSION": "~4",
+    
+    "ServiceBusConnection__fullyQualifiedNamespace": "sb-golden-support-dev.servicebus.windows.net",
+    "ServiceBusConnectionString": "Endpoint=sb://sb-golden-support-dev.servicebus.windows.net/;Authentication=Managed Identity",
+    "ServiceBusQueueName": "test",
+    "ServiceBusTopicName": "asb-topic-test",
+    
+    "APPINSIGHTS_INSTRUMENTATIONKEY": "your-instrumentation-key",
+    "APPLICATIONINSIGHTS_CONNECTION_STRING": "InstrumentationKey=your-key;IngestionEndpoint=https://your-region.in.applicationinsights.azure.com/",
+    
+    "DOTNET_VERSION": "9.0",
+    "WEBSITE_USE_PLACEHOLDER_DOTNETISOLATED": "1",
+    
+    "Logging__LogLevel__Default": "Information",
+    "Logging__LogLevel__Microsoft": "Warning"
+  }
+}
