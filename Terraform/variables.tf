@@ -88,7 +88,7 @@ variable "servicebus_sku" {
 variable "servicebus_queue_name" {
   description = "Název Service Bus queue"
   type        = string
-  default     = "test"
+  default     = "asb-queue-test"
 }
 
 variable "create_servicebus_topic" {
@@ -101,12 +101,6 @@ variable "servicebus_topic_name" {
   description = "Název Service Bus topic"
   type        = string
   default     = "asb-topic-test"
-}
-
-variable "servicebus_connection_string" {
-  description = "Service Bus connection string pro Functions"
-  type        = string
-  default     = "" # Bude sestaveno automaticky z namespace
 }
 
 # Application Insights

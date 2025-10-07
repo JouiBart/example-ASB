@@ -1,9 +1,9 @@
-﻿using Azure.Messaging.ServiceBus;
+﻿using ASB.Reader.Helpers;
+using Azure.Messaging.ServiceBus;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using System.Text.Json;
 
 namespace ASB.Reader;
 
@@ -11,7 +11,8 @@ public class Program
 {
     public static async Task Main(string[] args)
     {
-        Console.WriteLine("Azure Service Bus Reader Starting...");
+        Console.WriteLine("🚀 Azure Service Bus Reader Starting...");
+        Console.WriteLine(new string('=', 60));
 
         // Build configuration
         var configuration = new ConfigurationBuilder()
@@ -41,162 +42,117 @@ public class Program
             })
             .Build();
 
-        // Get the message reader service and start reading
-        var messageReader = host.Services.GetRequiredService<ServiceBusMessageReader>();
-        
-        // Handle Ctrl+C gracefully
-        using var cancellationTokenSource = new CancellationTokenSource();
-        Console.CancelKeyPress += (sender, e) =>
-        {
-            e.Cancel = true;
-            cancellationTokenSource.Cancel();
-            Console.WriteLine("\nShutdown requested...");
-        };
-
         try
         {
-            await messageReader.StartReadingAsync(cancellationTokenSource.Token);
+            // Get user choice for entity type
+            var (entityType, entityName, subscriptionName) = GetUserEntityChoice(configuration);
+            
+            // Get the message reader service
+            var messageReader = host.Services.GetRequiredService<ServiceBusMessageReader>();
+            
+            // Handle Ctrl+C gracefully
+            using var cancellationTokenSource = new CancellationTokenSource();
+            Console.CancelKeyPress += (sender, e) =>
+            {
+                e.Cancel = true;
+                cancellationTokenSource.Cancel();
+                Console.WriteLine("\n🛑 Shutdown requested...");
+            };
+
+            // Start reading messages with user-selected configuration
+            await messageReader.StartReadingAsync(entityType, entityName, subscriptionName, cancellationTokenSource.Token);
         }
         catch (OperationCanceledException)
         {
-            Console.WriteLine("Application stopped.");
+            Console.WriteLine("✋ Application stopped by user.");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Application error: {ex.Message}");
+            Console.WriteLine($"❌ Application error: {ex.Message}");
+            Console.WriteLine($"🔍 Details: {ex}");
         }
         finally
         {
             await host.StopAsync();
             host.Dispose();
-        }
-    }
-}
-
-public class ServiceBusMessageReader
-{
-    private readonly ServiceBusClient _serviceBusClient;
-    private readonly ILogger<ServiceBusMessageReader> _logger;
-    private readonly IConfiguration _configuration;
-    private ServiceBusProcessor? _processor;
-
-    public ServiceBusMessageReader(
-        ServiceBusClient serviceBusClient, 
-        ILogger<ServiceBusMessageReader> logger,
-        IConfiguration configuration)
-    {
-        _serviceBusClient = serviceBusClient;
-        _logger = logger;
-        _configuration = configuration;
-    }
-
-    public async Task StartReadingAsync(CancellationToken cancellationToken = default)
-    {
-        var queueName = _configuration["ServiceBusQueueName"] 
-            ?? Environment.GetEnvironmentVariable("ServiceBusQueueName") 
-            ?? "messages";
-
-        _logger.LogInformation("Starting to read messages from queue: {QueueName}", queueName);
-
-        // Create a processor for the queue
-        _processor = _serviceBusClient.CreateProcessor(queueName, new ServiceBusProcessorOptions
-        {
-            MaxConcurrentCalls = 1,
-            AutoCompleteMessages = false
-        });
-
-        // Add handlers for processing messages and handling errors
-        _processor.ProcessMessageAsync += MessageHandler;
-        _processor.ProcessErrorAsync += ErrorHandler;
-
-        // Start processing messages
-        await _processor.StartProcessingAsync(cancellationToken);
-
-        _logger.LogInformation("Message processor started. Press Ctrl+C to stop.");
-
-        // Keep the application running until cancellation is requested
-        try
-        {
-            await Task.Delay(Timeout.Infinite, cancellationToken);
-        }
-        catch (OperationCanceledException)
-        {
-            _logger.LogInformation("Cancellation requested, stopping processor...");
-        }
-        finally
-        {
-            if (_processor != null)
-            {
-                await _processor.StopProcessingAsync();
-                await _processor.DisposeAsync();
-            }
+            Console.WriteLine("👋 Goodbye!");
         }
     }
 
-    private async Task MessageHandler(ProcessMessageEventArgs args)
+    private static (ServiceBusEntityType entityType, string entityName, string? subscriptionName) GetUserEntityChoice(IConfiguration configuration)
     {
-        try
+        Console.WriteLine("📋 Vyberte typ Service Bus entity:");
+        Console.WriteLine("1️⃣  [Q] Queue - Zpracování zpráv z fronty");
+        Console.WriteLine("2️⃣  [T] Topic - Zpracování zpráv z tématu (vyžaduje subscription)");
+        Console.WriteLine();
+
+        ServiceBusEntityType entityType;
+        while (true)
         {
-            var messageId = args.Message.MessageId;
-            var body = args.Message.Body.ToString();
-            
-            _logger.LogInformation("Received message ID: {MessageId}", messageId);
-            _logger.LogInformation("Message body: {Body}", body);
+            Console.Write("👉 Zadejte volbu (Q/T): ");
+            var choice = Console.ReadLine()?.Trim().ToUpperInvariant();
 
-            // Try to deserialize as JSON if possible
-            try
+            if (choice == "Q" || choice == "1")
             {
-                var jsonDocument = JsonDocument.Parse(body);
-                var formattedJson = JsonSerializer.Serialize(jsonDocument, new JsonSerializerOptions 
-                { 
-                    WriteIndented = true 
-                });
-                Console.WriteLine("Formatted JSON message:");
-                Console.WriteLine(formattedJson);
+                entityType = ServiceBusEntityType.Queue;
+                break;
             }
-            catch (JsonException)
+            else if (choice == "T" || choice == "2")
             {
-                Console.WriteLine("Plain text message:");
-                Console.WriteLine(body);
+                entityType = ServiceBusEntityType.Topic;
+                break;
             }
+            else
+            {
+                Console.WriteLine("❌ Neplatná volba. Zadejte prosím Q pro Queue nebo T pro Topic.");
+            }
+        }
 
-            // Display message properties
-            if (args.Message.ApplicationProperties.Count > 0)
+        string entityName;
+        string? subscriptionName = null;
+
+        if (entityType == ServiceBusEntityType.Queue)
+        {
+            Console.WriteLine();
+            Console.WriteLine("🗂️  KONFIGURACE QUEUE");
+            var defaultQueue = configuration["ServiceBusQueueName"] ?? "asb-queue-test";
+            Console.Write($"📝 Zadejte název Queue (default: {defaultQueue}): ");
+            var userInput = Console.ReadLine()?.Trim();
+            entityName = string.IsNullOrEmpty(userInput) ? defaultQueue : userInput;
+        }
+        else
+        {
+            Console.WriteLine();
+            Console.WriteLine("📡 KONFIGURACE TOPIC");
+            var defaultTopic = configuration["ServiceBusTopicName"] ?? "asb-topic-test";
+            Console.Write($"📝 Zadejte název Topic (default: {defaultTopic}): ");
+            var userInput = Console.ReadLine()?.Trim();
+            entityName = string.IsNullOrEmpty(userInput) ? defaultTopic : userInput;
+
+            while (string.IsNullOrWhiteSpace(subscriptionName))
             {
-                Console.WriteLine("Message properties:");
-                foreach (var property in args.Message.ApplicationProperties)
+                Console.Write("📮 Zadejte název Subscription (default: asb-topic-test-subscription): ");
+                userInput = Console.ReadLine()?.Trim();
+                subscriptionName = string.IsNullOrEmpty(userInput) ? "asb-topic-test-subscription" : userInput;
+                if (string.IsNullOrWhiteSpace(subscriptionName))
                 {
-                    Console.WriteLine($"  {property.Key}: {property.Value}");
+                    Console.WriteLine("❌ Název subscription je povinný pro Topic!");
                 }
             }
-
-            // Display message metadata
-            Console.WriteLine($"Content Type: {args.Message.ContentType}");
-            Console.WriteLine($"Enqueued Time: {args.Message.EnqueuedTime:yyyy-MM-dd HH:mm:ss} UTC");
-            Console.WriteLine($"Delivery Count: {args.Message.DeliveryCount}");
-            Console.WriteLine(new string('-', 50));
-
-            // Complete the message so it's removed from the queue
-            await args.CompleteMessageAsync(args.Message);
-            
-            _logger.LogInformation("Message {MessageId} processed successfully", messageId);
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error processing message {MessageId}: {Error}", 
-                args.Message.MessageId, ex.Message);
-            
-            // Abandon the message so it can be reprocessed
-            await args.AbandonMessageAsync(args.Message);
-        }
-    }
 
-    private Task ErrorHandler(ProcessErrorEventArgs args)
-    {
-        _logger.LogError(args.Exception, "Service Bus error occurred: {Error}", args.Exception.Message);
-        _logger.LogError("Error source: {Source}", args.ErrorSource);
-        _logger.LogError("Entity path: {EntityPath}", args.EntityPath);
-        
-        return Task.CompletedTask;
+        Console.WriteLine();
+        Console.WriteLine(new string('-', 60));
+        Console.WriteLine($"✅ KONFIGUROVÁNO:");
+        Console.WriteLine($"   Typ: {entityType}");
+        Console.WriteLine($"   Název: {entityName}");
+        if (subscriptionName != null)
+            Console.WriteLine($"   Subscription: {subscriptionName}");
+        Console.WriteLine(new string('-', 60));
+        Console.WriteLine();
+
+        return (entityType, entityName, subscriptionName);
     }
 }
+
+
